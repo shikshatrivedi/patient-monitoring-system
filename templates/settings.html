@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <h3><i class="fa-solid fa-microchip"></i> Hardware Configuration</h3>
+    <br>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div
+        style="padding: 10px; margin-bottom: 15px; background: #d1fae5; color: #065f46; border-radius: 6px; border-left: 4px solid #10b981;">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'settings' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label class="form-label">Serial Port (Arduino)</label>
+            <select class="form-control" name="port" id="port-select" data-current="{{ config.port }}">
+                <option value="COM3">COM3 (Arduino Uno)</option>
+                <option value="COM4">COM4</option>
+                <option value="COM5">COM5</option>
+                <option value="COM6">COM6</option>
+                <option value="COM7">COM7</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Baud Rate</label>
+            <select class="form-control" name="baud_rate" id="baud-select" data-current="{{ config.baud_rate }}">
+                <option value="9600">9600</option>
+                <option value="115200">115200</option>
+            </select>
+        </div>
+
+        <hr style="margin: 20px 0; border-top: 1px solid #eee;">
+
+        <h4>Threshold Alerts</h4>
+        <br>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+                <label class="form-label">Max Heart Rate (BPM)</label>
+                <input type="number" value="120" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Min SpO2 (%)</label>
+                <input type="number" value="90" class="form-control">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save Configuration</button>
+    </form>
+</div>
+
+<script>
+    // Pre-select the saved values using data attributes — no Django template comparison needed
+    (function () {
+        var portSel = document.getElementById('port-select');
+        var baudSel = document.getElementById('baud-select');
+
+        if (portSel) {
+            var savedPort = portSel.getAttribute('data-current');
+            for (var i = 0; i < portSel.options.length; i++) {
+                if (portSel.options[i].value === savedPort) {
+                    portSel.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (baudSel) {
+            var savedBaud = baudSel.getAttribute('data-current');
+            for (var i = 0; i < baudSel.options.length; i++) {
+                if (baudSel.options[i].value === savedBaud) {
+                    baudSel.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    })();
+</script>
+{% endblock %}

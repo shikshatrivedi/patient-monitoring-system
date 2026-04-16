@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 20px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: #1e293b;">Patient Registry</h2>
+        <a href="{% url 'add_patient' %}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Add New Patient
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8fafc;">
+                    <tr>
+                        <th class="ps-4">Patient Name</th>
+                        <th>Age/Gender</th>
+                        <th>Condition</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div
+                                    style="width: 40px; height: 40px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 12px; overflow: hidden;">
+                                    {% if patient.photo %}
+                                    <img src="{{ patient.photo.url }}"
+                                        style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <span style="color: #64748b; font-weight: bold;">{{ patient.first_name|slice:":1"
+                                        }}</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: #334155;">{{ patient.full_name }}</div>
+                                    <small style="color: #94a3b8; display: block; margin-bottom: 4px;">ID: #{{ patient.id }}</small>
+                                    
+                                    <!-- Repositioned Actions: Delete & Edit -->
+                                    <div class="d-flex flex-column gap-1">
+                                        <form method="POST" action="{% url 'delete_patient' patient.id %}" style="display:inline;"
+                                            onsubmit="return confirm('Are you sure you want to delete this patient?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm text-danger p-0" style="font-size: 11px; background: none; border: none; font-weight: 600;">
+                                                <i class="fa-solid fa-trash-can"></i> Delete Patient
+                                            </button>
+                                        </form>
+                                        <a href="{% url 'edit_patient' patient.id %}" class="btn btn-sm text-warning p-0" style="font-size: 11px; background: none; border: none; font-weight: 600; text-align: left; width: fit-content;">
+                                            <i class="fa-solid fa-pen"></i> Edit Patient
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>{{ patient.age }} / {{ patient.gender }}</td>
+
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ patient.condition }}</span>
+                        </td>
+
+                        <td>Dr. {{ patient.assigned_doctor.username }}</td>
+
+                        <td>
+                            {% if patient == active_patient %}
+                            <span class="badge bg-warning text-dark">MONITORING</span>
+                            {% elif patient.has_reports > 0 %}
+                            <span class="badge bg-success">COMPLETED</span>
+                            {% else %}
+                            <span class="badge bg-secondary">NEW PATIENT</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'toggle_monitoring' patient.id %}"
+                                class="btn btn-sm {% if patient == active_patient %}btn-danger{% else %}btn-success{% endif %}">
+                                {% if patient == active_patient %}Stop Monitoring{% else %}Start Monitoring{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5" style="color: #94a3b8;">
+                            No patients registered yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

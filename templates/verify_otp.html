@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify OTP</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="glass-container">
+        <div class="logo-area">
+            <h1>VERIFY</h1>
+            <p>Enter OTP sent to your Mobile</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            {% if messages %}
+                {% for message in messages %}
+                <div style="color: #4cd137; font-size: 12px; margin-bottom:10px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <input type="text" name="otp" placeholder="Enter 4-Digit OTP" class="form-input" required>
+            <input type="password" name="new_password" placeholder="New Password (Min 10 chars)" class="form-input" required>
+
+            <button type="submit" class="btn-primary">RESET PASSWORD</button>
+        </form>
+    </div>
+</body>
+</html>

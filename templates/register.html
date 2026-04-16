@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PMS - Doctor Registration</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #e2e8f0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #001e2b 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 900px;
+            height: 650px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+
+        /* --- Left Side (Visuals) --- */
+        .visual-side {
+            width: 40%;
+            background: linear-gradient(180deg, rgba(0, 242, 254, 0.1) 0%, rgba(0,0,0,0) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+            color: white;
+        }
+
+        .visual-side i {
+            font-size: 80px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px var(--primary);
+        }
+
+        .visual-side h2 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+
+        .visual-side p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* --- Right Side (Form) --- */
+        .form-side {
+            width: 60%;
+            padding: 40px;
+            overflow-y: auto; /* In case form is tall */
+        }
+
+        .form-header {
+            margin-bottom: 30px;
+        }
+
+        .form-header h3 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .form-header span {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px 12px 45px; /* Space for icon */
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box; /* Fixes padding issues */
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+        }
+
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* Error Box */
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Success Box */
+        .success-msg {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            color: #22c55e;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* File upload field */
+        .input-group input[type="file"] {
+            padding: 10px 10px 10px 45px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="visual-side">
+            <i class="fa-solid fa-user-doctor"></i>
+            <h2>JOIN MEDICAL STAFF</h2>
+            <p>Secure Access for Authorized Personnel Only</p>
+            <div style="margin-top: 30px; height: 2px; width: 50px; background: var(--primary);"></div>
+        </div>
+
+        <div class="form-side">
+            <div class="form-header">
+                <h3>Create Account</h3>
+                <span>Please fill in your professional details</span>
+            </div>
+
+            {% if registration_success %}
+            <div class="success-msg">
+                <strong>Registration successful</strong><br>
+                Now go back to login
+            </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if form.errors %}
+    <div class="error-msg" style="display:block; flex-direction:column; align-items:flex-start;">
+        <p style="margin:0; font-weight:bold; margin-bottom:5px;">Please fix the following:</p>
+        <ul style="margin:0; padding-left:20px;">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+                {% if messages %}
+                {% for message in messages %}
+                <div class="error-msg"><i class="fa-solid fa-circle-exclamation"></i> {{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
+                <div class="row">
+                    <div class="input-group" style="flex: 1;">
+                        <i class="fa-solid fa-id-card"></i>
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" name="email" placeholder="Email Address" required>
+                    </div>
+                </div>
+                
+
+                <div class="row">
+                    <div class="input-group" style="flex: 1;">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <input type="text" name="degree" placeholder="Degree (e.g. MD, MBBS)" required>
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="text" name="mobile_number" placeholder="Mobile Number">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-hospital-user"></i>
+                    <select name="department" style="color: #94a3b8;">
+                        <option value="" disabled selected>Select Department</option>
+<option value="General Medicine">General Medicine Physician</option>
+<option value="Primary Care">Primary Care Doctor</option>
+<option value="Internal Medicine">Internal Medicine Specialist</option>
+<option value="Clinical Physician">Clinical Physician</option>
+<option value="Family Medicine">Family Medicine Doctor</option>
+<option value="Medical Officer">Medical Officer</option>
+
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" name="password" placeholder="Password (Min 8 chars, 1 Upper, 1 Special)" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-id-badge"></i>
+                    <input type="file" name="id_card" accept="image/*,.pdf" required>
+                </div>
+
+                <button type="submit" class="btn-submit">REGISTER DOCTOR</button>
+            </form>
+
+            <div class="login-link">
+                Already have an ID? <a href="{% url 'login' %}">Login Here</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

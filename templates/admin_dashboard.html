@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 20px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: #1e293b;"><i class="fa-solid fa-shield-halved"></i> Admin Control Panel</h2>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+        <div class="card shadow-sm border-0 text-center" style="padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: #2563eb;">{{ total_doctors }}</div>
+            <div style="color: #64748b; font-size: 13px;">Total Doctors</div>
+        </div>
+        <div class="card shadow-sm border-0 text-center" style="padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: #f59e0b;">{{ pending_count }}</div>
+            <div style="color: #64748b; font-size: 13px;">Pending Approvals</div>
+        </div>
+        <div class="card shadow-sm border-0 text-center" style="padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: #10b981;">{{ total_patients }}</div>
+            <div style="color: #64748b; font-size: 13px;">Total Patients</div>
+        </div>
+        <div class="card shadow-sm border-0 text-center" style="padding: 20px;">
+            <div style="font-size: 32px; font-weight: 700; color: #ef4444;">{{ total_alerts }}</div>
+            <div style="color: #64748b; font-size: 13px;">System Alerts</div>
+        </div>
+    </div>
+
+    <!-- Search Doctor Section (Hospital Reference Database) -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h5 style="margin:0; color: #1e293b;"><i class="fa-solid fa-magnifying-glass" style="color:#2563eb;"></i> Search Hospital Doctor Reference Database</h5>
+                <small style="color:#64748b;">Search approved hospital staff records to verify a doctor's identity before approval.</small>
+            </div>
+            <div style="padding: 16px 20px;">
+                <div class="d-flex gap-2 mb-3">
+                    <input type="text" id="hospitalDoctorSearch" class="form-control" placeholder="Type doctor name (e.g. Arun Singh, Priya Sharma...)" style="max-width:420px;">
+                    <button onclick="searchHospitalDoctor()" class="btn btn-primary" style="white-space:nowrap;">
+                        <i class="fa-solid fa-search"></i> Search
+                    </button>
+                    <button onclick="clearSearch()" class="btn btn-outline-secondary" style="white-space:nowrap;">Clear</button>
+                </div>
+                <div id="hospitalSearchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Attach Enter key to search
+    document.getElementById('hospitalDoctorSearch').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') searchHospitalDoctor();
+    });
+
+    function searchHospitalDoctor() {
+        var query = document.getElementById('hospitalDoctorSearch').value.trim();
+        var resultsDiv = document.getElementById('hospitalSearchResults');
+        if (!query) {
+            resultsDiv.innerHTML = '<p style="color:#94a3b8; font-size:13px;">Please enter a doctor name to search.</p>';
+            return;
+        }
+        resultsDiv.innerHTML = '<p style="color:#94a3b8; font-size:13px;"><i class="fa-solid fa-spinner fa-spin"></i> Searching...</p>';
+        fetch('/admin-panel/search-hospital-doctor/?q=' + encodeURIComponent(query), {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.results.length === 0) {
+                resultsDiv.innerHTML = '<p style="color:#ef4444; font-size:13px;"><i class="fa-solid fa-circle-exclamation"></i> No matching doctor found in hospital reference database for "<strong>' + escapeHtml(data.query) + '</strong>".</p>';
+                return;
+            }
+            var html = '<div style="overflow-x:auto;"><table class="table table-sm table-bordered align-middle mb-0" style="font-size:13px;">';
+            html += '<thead style="background:#f0f7ff;"><tr><th>Hospital Doc ID</th><th>Name</th><th>Department</th><th>Specialization</th></tr></thead><tbody>';
+            data.results.forEach(function(doc) {
+                html += '<tr>';
+                html += '<td><code style="color:#2563eb;">' + escapeHtml(doc.hospital_doc_id) + '</code></td>';
+                html += '<td><strong>' + escapeHtml(doc.name) + '</strong></td>';
+                html += '<td>' + escapeHtml(doc.department) + '</td>';
+                html += '<td style="color:#64748b;">' + (doc.specialization ? escapeHtml(doc.specialization) : '—') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            html += '<p style="color:#10b981; font-size:12px; margin-top:6px;"><i class="fa-solid fa-circle-check"></i> ' + data.results.length + ' record(s) found. Compare with the pending registration and ID card below.</p>';
+            resultsDiv.innerHTML = html;
+        })
+        .catch(function() {
+            resultsDiv.innerHTML = '<p style="color:#ef4444; font-size:13px;">Error contacting server. Please try again.</p>';
+        });
+    }
+
+    function clearSearch() {
+        document.getElementById('hospitalDoctorSearch').value = '';
+        document.getElementById('hospitalSearchResults').innerHTML = '';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    </script>
+
+    <!-- Pending Approvals Section -->
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h5 style="margin:0; color: #1e293b;"><i class="fa-solid fa-clock" style="color:#f59e0b;"></i> Pending Doctor Approvals</h5>
+            </div>
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8fafc;">
+                    <tr>
+                        <th class="ps-4">Doctor ID</th>
+                        <th>Username</th>
+                        <th>Mobile Number</th>
+                        <th>Status</th>
+                        <th>ID Card</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in pending_doctors %}
+                    <tr>
+                        <td class="ps-4"><code>{{ profile.doctor_id|default:"—" }}</code></td>
+                        <td>{{ profile.user.username }}</td>
+                        <td>{{ profile.mobile_number }}</td>
+                        <td><span class="badge bg-warning text-dark">Pending</span></td>
+                        <td>
+                            {% if profile.id_card %}
+                            <a href="{{ profile.id_card.url }}" target="_blank" class="btn btn-sm btn-outline-primary" style="font-size:11px;">
+                                <i class="fa-solid fa-id-card"></i> View ID Card
+                            </a>
+                            {% else %}
+                            <span style="color:#94a3b8; font-size:12px;">Not uploaded</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'approve_doctor' profile.id %}" class="btn btn-sm btn-success">Approve</a>
+                            <a href="{% url 'reject_doctor' profile.id %}" class="btn btn-sm btn-danger">Reject</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4" style="color: #94a3b8;">No pending approvals.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- All Doctors Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h5 style="margin:0; color: #1e293b;"><i class="fa-solid fa-user-md" style="color:#2563eb;"></i> All Doctors</h5>
+            </div>
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8fafc;">
+                    <tr>
+                        <th class="ps-4">Doctor ID</th>
+                        <th>Username</th>
+                        <th>Mobile</th>
+                        <th>Status</th>
+                        <th>Approved By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in all_doctors %}
+                    <tr>
+                        <td class="ps-4"><code>{{ profile.doctor_id|default:"—" }}</code></td>
+                        <td>{{ profile.user.username }}</td>
+                        <td>{{ profile.mobile_number }}</td>
+                        <td>
+                            {% if profile.doctor_status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                            {% elif profile.doctor_status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if profile.approved_by_admin %}
+                            {{ profile.approved_by_admin.username }}
+                            {% else %}
+                            <span style="color:#94a3b8;">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4" style="color: #94a3b8;">No doctors registered.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- All Patients Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h5 style="margin:0; color: #1e293b;"><i class="fa-solid fa-bed-pulse" style="color:#10b981;"></i> All Patients</h5>
+            </div>
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8fafc;">
+                    <tr>
+                        <th class="ps-4">Name</th>
+                        <th>Age/Gender</th>
+                        <th>Condition</th>
+                        <th>Assigned Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in all_patients %}
+                    <tr>
+                        <td class="ps-4">{{ patient.full_name }}</td>
+                        <td>{{ patient.age }} / {{ patient.gender }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ patient.condition }}</span></td>
+                        <td>
+                            {% if patient.assigned_doctor %}
+                            Dr. {{ patient.assigned_doctor.username }}
+                            {% else %}
+                            <span style="color:#94a3b8;">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if patient.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Discharged</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4" style="color: #94a3b8;">No patients registered.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Recent Alerts Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-0">
+            <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9;">
+                <h5 style="margin:0; color: #1e293b;"><i class="fa-solid fa-bell" style="color:#ef4444;"></i> Recent System Alerts</h5>
+            </div>
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #f8fafc;">
+                    <tr>
+                        <th class="ps-4">Patient</th>
+                        <th>Alert Type</th>
+                        <th>Message</th>
+                        <th>BPM</th>
+                        <th>SpO2</th>
+                        <th>Severity</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in recent_alerts %}
+                    <tr>
+                        <td class="ps-4">{{ alert.patient.full_name }}</td>
+                        <td>{{ alert.get_alert_type_display }}</td>
+                        <td>{{ alert.message }}</td>
+                        <td>{{ alert.bpm|default:"—" }}</td>
+                        <td>{{ alert.spo2|default:"—" }}</td>
+                        <td>
+                            {% if alert.alert_severity == 'critical' %}
+                            <span class="badge bg-danger">Critical</span>
+                            {% elif alert.alert_severity == 'warning' %}
+                            <span class="badge bg-warning text-dark">Warning</span>
+                            {% else %}
+                            <span class="badge bg-success">Normal</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:#94a3b8; font-size:12px;">{{ alert.timestamp|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4" style="color: #94a3b8;">No alerts generated.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

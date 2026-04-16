@@ -1,0 +1,291 @@
+/* === MEDICAL HIGH-TECH THEME === */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    background: linear-gradient(135deg, #000428 0%, #004e92 100%); /* Deep Medical Blue */
+    font-family: 'Poppins', sans-serif;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    overflow: hidden;
+}
+
+/* The Main Card Container */
+.medical-container {
+    display: flex;
+    width: 900px;
+    height: 550px;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+/* LEFT SIDE: Visuals & Animation */
+.visual-side {
+    width: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.visual-side h2 {
+    font-size: 32px;
+    margin: 0;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.visual-side p {
+    color: #a8c0ff;
+    font-size: 14px;
+    margin-top: 10px;
+    letter-spacing: 1px;
+}
+
+/* THE HEARTBEAT ANIMATION (ECG) */
+.ecg-container {
+    width: 80%;
+    height: 60px;
+    margin-top: 40px;
+    position: relative;
+    border-bottom: 2px solid rgba(0, 242, 254, 0.1);
+    overflow: hidden;
+}
+
+.ecg-line {
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 100" preserveAspectRatio="none"><polyline fill="none" stroke="%2300f2fe" stroke-width="3" points="0,50 150,50 160,20 170,80 180,50 300,50 310,10 320,90 330,50 500,50"/></svg>');
+    background-repeat: repeat-x;
+    background-size: 50% 100%;
+    position: absolute;
+    animation: heartbeat 2s linear infinite;
+}
+
+@keyframes heartbeat {
+    0% { left: -50%; }
+    100% { left: 0%; }
+}
+
+/* RIGHT SIDE: The Form */
+.form-side {
+    width: 50%;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-header {
+    margin-bottom: 30px;
+}
+
+.form-header h3 {
+    font-size: 24px;
+    margin: 0;
+    color: white;
+}
+
+.form-header span {
+    font-size: 12px;
+    color: #aaa;
+}
+
+/* Modern Inputs */
+.input-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-input {
+    width: 100%;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    border-color: #00f2fe;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+/* Action Button */
+.btn-primary {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+}
+
+/* Links */
+.links {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+
+.links a {
+    color: #ccc;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.links a:hover {
+    color: #00f2fe;
+}
+
+/* Error Messages */
+.error-box {
+    background: rgba(255, 0, 0, 0.1);
+    border-left: 3px solid #ff4b4b;
+    padding: 10px;
+    font-size: 12px;
+    color: #ffbdbd;
+    margin-bottom: 15px;
+}
+/* =========================================
+   DASHBOARD & APP STYLES (Added for Phase 2)
+   ========================================= */
+
+/* Navbar */
+.navbar {
+    width: 100%;
+    height: 60px;
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    font-size: 20px;
+    font-weight: bold;
+    color: #00f2fe;
+}
+
+.nav-links a {
+    color: #ccc;
+    text-decoration: none;
+    margin-left: 20px;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    color: white;
+    text-shadow: 0 0 5px #00f2fe;
+}
+
+/* Main Layout */
+.main-content {
+    margin-top: 80px; /* Space for navbar */
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Glass Panels (Reusing your theme) */
+.panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+}
+
+.panel h3 {
+    margin-top: 0;
+    color: #4facfe;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+/* Patient Grid System */
+.patient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.patient-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 242, 254, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    transition: 0.3s;
+    text-align: center;
+}
+
+.patient-card:hover {
+    transform: translateY(-5px);
+    border-color: #00f2fe;
+    box-shadow: 0 5px 15px rgba(0, 242, 254, 0.1);
+}
+
+.patient-card h4 {
+    margin: 10px 0;
+    font-size: 18px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 11px;
+    font-weight: bold;
+    background: rgba(0, 255, 0, 0.2);
+    color: #00ff00;
+}
+
+/* Add Button */
+.btn-add {
+    background: #00f2fe;
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 20px;
+}

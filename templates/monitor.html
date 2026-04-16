@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2>{{ patient.first_name }} {{ patient.last_name }}</h2>
+            <p style="color: #64748b;">{{ patient.condition }} | {{ patient.assigned_device }}</p>
+        </div>
+        <div style="text-align: right;">
+            <span style="display: block; font-size: 12px; color: #64748b;">STATUS</span>
+            <span id="monitor-status" style="color: var(--success); font-weight: bold; font-size: 18px;">LIVE
+                MONITORING</span>
+        </div>
+    </div>
+
+    <hr style="margin: 20px 0; border-top: 1px solid #eee;">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; text-align: center;">
+        <div style="padding: 40px; background: #fee2e2; border-radius: 12px;">
+            <i class="fa-solid fa-heart" style="font-size: 40px; color: var(--danger); margin-bottom: 10px;"></i>
+            <div id="live-bpm" style="font-size: 60px; font-weight: 800; color: var(--secondary);">--</div>
+            <div style="font-size: 18px; color: var(--text-light);">BPM (Heart Rate)</div>
+        </div>
+
+        <div style="padding: 40px; background: #e0f2fe; border-radius: 12px;">
+            <i class="fa-solid fa-droplet" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+            <div id="live-spo2" style="font-size: 60px; font-weight: 800; color: var(--secondary);">--</div>
+            <div style="font-size: 18px; color: var(--text-light);">% SpO2 (Oxygen)</div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+        <a href="{% url 'patient_list' %}" class="btn btn-outline">Stop Monitoring</a>
+    </div>
+</div>
+
+<script>
+    // Poll the live-data API every 2 seconds and update the display
+    function updateVitals() {
+        fetch("{% url 'live_data' %}")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('live-bpm').textContent = data.bpm;
+                document.getElementById('live-spo2').textContent = data.spo2;
+
+                var statusEl = document.getElementById('monitor-status');
+                if (data.is_connected) {
+                    statusEl.textContent = 'LIVE MONITORING ✅';
+                    statusEl.style.color = 'var(--success)';
+                } else {
+                    statusEl.textContent = 'HARDWARE OFFLINE ❌';
+                    statusEl.style.color = 'var(--danger)';
+                }
+            })
+            .catch(function () {
+                document.getElementById('monitor-status').textContent = 'CONNECTION ERROR';
+            });
+    }
+
+    // Start polling immediately and then every 2 seconds
+    updateVitals();
+    setInterval(updateVitals, 2000);
+</script>
+{% endblock %}

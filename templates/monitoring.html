@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if not monitoring_active %}
+<div style="height: 80vh; display: flex; align-items: center; justify-content: center; text-align: center; background: #f8fafc;">
+    <div style="max-width: 400px; padding: 40px; background: white; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+        <div style="font-size: 64px; margin-bottom: 24px; opacity: 0.8;">📡</div>
+        <h2 style="color: #1e293b; font-weight: 800; margin-bottom: 12px;">Monitoring Inactive</h2>
+        <p style="color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 30px;">
+            Please select a patient from the Dashboard and ensure the system is ready to begin real-time vital tracking.
+        </p>
+        <a href="{% url 'dashboard' %}" style="display: inline-block; padding: 12px 30px; background: #3b82f6; color: white; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.3s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+            Return to Dashboard
+        </a>
+    </div>
+</div>
+{% else %}
+<style>
+  /* Pulse Animation for Live Alerts */
+  @keyframes pulse-red {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  .live-indicator {
+    animation: pulse-red 2s infinite ease-in-out;
+  }
+  
+  .badge-source {
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .bg-warning-light { background: #fefce8; color: #854d00; border: 1px solid #fef08a; }
+  .bg-success-light { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  /* ── Layout grid ── */
+  .mon-top {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  .mon-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  /* ── Shared card ── */
+  .mon-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel { text-align: center; }
+  .patient-photo {
+    width: 110px; height: 110px;
+    border-radius: 50%; object-fit: cover;
+    border: 4px solid #e2e8f0;
+    margin-bottom: 14px;
+  }
+  .patient-name { font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+  .patient-badge {
+    display: inline-block; font-size: 11px;
+    background: #dcfce7; color: #15803d;
+    padding: 3px 10px; border-radius: 20px; margin-bottom: 16px;
+  }
+
+  /* info grid (2 × N) */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    text-align: center;
+  }
+  .info-box {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 12px 8px;
+  }
+  .info-box .val { font-size: 20px; font-weight: 700; color: #1e293b; }
+  .info-box .lbl { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* ── LIVE VITAL BOXES ── */
+  .vitals-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-content: start;
+  }
+  .vital-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    text-align: center;
+  }
+  .vital-box .v-icon { font-size: 28px; margin-bottom: 10px; }
+  .vital-box .v-value { font-size: 48px; font-weight: 800; color: #1e293b; line-height: 1; }
+  .vital-box .v-unit  { font-size: 14px; color: #64748b; font-weight: 500; margin-top: 4px; }
+  .vital-box .v-label { font-size: 13px; font-weight: 600; color: #475569; margin-top: 12px; letter-spacing: .4px; }
+  .vital-box.hr-box { border-top: 4px solid #ef4444; }
+  .vital-box.spo2-box { border-top: 4px solid #3b82f6; }
+
+  /* ── CIRCULAR RINGS ── */
+  .rings-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .ring-card { text-align: center; padding: 20px 10px; }
+  .progress-ring { position: relative; width: 120px; height: 120px; margin: 0 auto 12px; }
+  .progress-ring svg { transform: rotate(-90deg); width: 120px; height: 120px; }
+  .progress-ring circle { fill: transparent; stroke-width: 12; }
+  .progress-ring .bg { stroke: #e2e8f0; }
+  .progress-ring .fg { stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+  .ring-pct {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22px; font-weight: 800; color: #1e293b;
+  }
+  .ring-label { font-size: 13px; font-weight: 700; color: #475569; }
+
+  /* ── REPORT BUTTON ── */
+  .report-section { text-align: center; padding: 10px 0 20px; }
+  .btn-report-on {
+    background: #10b981; color: #fff; border: none;
+    border-radius: 12px; padding: 12px 36px; font-size: 15px;
+    font-weight: 700; cursor: pointer; text-decoration: none;
+    display: inline-block; transition: background .2s;
+  }
+  .btn-report-on:hover { background: #059669; color: #fff; }
+  .btn-report-off {
+    background: #e2e8f0; color: #94a3b8; border: none;
+    border-radius: 12px; padding: 12px 36px; font-size: 15px;
+    font-weight: 700; cursor: not-allowed; pointer-events: none;
+    display: inline-block; opacity: .55;
+  }
+  .report-hint { font-size: 12px; color: #94a3b8; margin-top: 6px; }
+
+  /* ── PAST REPORTS ── */
+  .past-report-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+  }
+  .past-report-row a { color: #3b82f6; font-weight: 600; text-decoration: none; }
+  .past-report-row a:hover { text-decoration: underline; }
+</style>
+
+<!-- ════════════════════════════════════════════ TOP ROW ════════════════════════════════════════════ -->
+<div class="mon-top">
+
+  <!-- LEFT: Patient Info -->
+  <div class="mon-card left-panel">
+    {% if active_patient.photo %}
+      <img src="{{ active_patient.photo.url }}" class="patient-photo" alt="Photo">
+    {% else %}
+      <div class="patient-photo" style="background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:36px;color:#94a3b8;">
+        <i class="fa-solid fa-user"></i>
+      </div>
+    {% endif %}
+    <div class="patient-name">{{ active_patient.full_name }}</div>
+    <div class="patient-badge">Monitoring Active</div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="val">{{ active_patient.age }}</div>
+        <div class="lbl">Age (Years)</div>
+      </div>
+      <div class="info-box">
+        <div class="val">{{ active_patient.blood_group|default:"--" }}</div>
+        <div class="lbl">Blood Group</div>
+      </div>
+      <div class="info-box">
+        <div class="val">{% if active_patient.height %}{{ active_patient.height }}{% else %}--{% endif %}</div>
+        <div class="lbl">Height (cm)</div>
+      </div>
+      <div class="info-box">
+        <div class="val">{% if active_patient.weight %}{{ active_patient.weight }}{% else %}--{% endif %}</div>
+        <div class="lbl">Weight (kg)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Two Live Vital Boxes -->
+  <div class="vitals-row">
+    <!-- Data Source Badge -->
+    <div style="grid-column:1/-1;text-align:right;margin-bottom:-10px;">
+      <span class="badge-source {% if not arduino_connected %}bg-warning-light{% else %}bg-success-light{% endif %}" data-badge="source">
+        {{ data_source_badge }}
+      </span>
+    </div>
+    <!-- Heart Rate Box -->
+    <div class="vital-box hr-box">
+      <div class="v-icon live-indicator">❤️</div>
+      <div class="v-value" id="liveHR">{% if initial_bpm %}{{ initial_bpm }}{% else %}--{% endif %}</div>
+      <div class="v-unit">BPM</div>
+      <div class="v-label">Heart Rate</div>
+    </div>
+    <!-- SpO2 Box -->
+    <div class="vital-box spo2-box">
+      <div class="v-icon">🫁</div>
+      <div class="v-value" id="liveSpo2">{% if initial_spo2 %}{{ initial_spo2 }}{% else %}--{% endif %}</div>
+      <div class="v-unit">%</div>
+      <div class="v-label">Oxygen Saturation (SpO2)</div>
+    </div>
+  </div>
+
+</div>
+<!-- ══════════════════════════════════════════ BOTTOM ROW ════════════════════════════════════════════ -->
+<div class="mon-bottom">
+
+  <!-- Weekly Bar Chart -->
+  <div class="mon-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h5 style="color:#1e293b;margin:0;font-weight:700;">Your Activity</h5>
+      <span style="font-size:14px;font-weight:600;color:#64748b;">Weekly</span>
+    </div>
+    <div style="height:280px; position: relative;">
+      <canvas id="weeklyChart"></canvas>
+      <div id="noActivityPlaceholder" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #e2e8f0; color: #94a3b8; text-align: center;">
+          <i class="fa-solid fa-chart-line" style="font-size: 36px; margin-bottom: 10px; opacity: 0.5;"></i>
+          <p style="font-size: 13px; font-weight: 500; margin: 0;">Awaiting clinical data...</p>
+          <p style="font-size: 11px; opacity: 0.8;">Chart will populate as readings are collected.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Circular Metrics -->
+  <div class="mon-card">
+    <h5 style="color:#1e293b;font-weight:700;margin-bottom:20px;">Health Metrics</h5>
+    <div class="rings-wrap">
+      <div class="ring-card">
+        <div class="progress-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="bg" cx="60" cy="60" r="50"></circle>
+            <circle id="healthRingFg" class="fg" cx="60" cy="60" r="50"
+                    style="stroke:#10b981;stroke-dasharray:314;stroke-dashoffset:100;"></circle>
+          </svg>
+          <div class="ring-pct" id="healthPct">--</div>
+        </div>
+        <div class="ring-label">General Health</div>
+      </div>
+      <div class="ring-card">
+        <div class="progress-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="bg" cx="60" cy="60" r="50"></circle>
+            <circle id="oxygenRingFg" class="fg" cx="60" cy="60" r="50"
+                    style="stroke:#06b6d4;stroke-dasharray:314;stroke-dashoffset:100;"></circle>
+          </svg>
+          <div class="ring-pct" id="oxygenPct">--</div>
+        </div>
+        <div class="ring-label">Oxygen Balance</div>
+      </div>
+    </div>
+
+    <div style="margin-top:24px;">
+      <div style="font-size:13px;font-weight:700;color:#475569;margin-bottom:8px;">Past Reports</div>
+      {% if saved_reports %}
+      {% for rpt in saved_reports %}
+      <div class="past-report-row">
+        <span style="color:#334155;">{{ rpt.generated_at|date:"d M Y" }}</span>
+        <a href="{% url 'download_report' rpt.id %}"><i class="fa-solid fa-download"></i> PDF</a>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div style="padding:15px; border-radius:10px; background:#f8fafc; border:1px dashed #e2e8f0; text-align:center; color:#94a3b8;">
+        <p style="font-size:11px; margin:0;">No previous records available.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════ REPORT BUTTON ═══════════════════════════════════════════ -->
+<div class="report-section">
+  {% if readings_count >= 10 and not report_sent %}
+    <a href="{% url 'generate_report' active_patient.id %}"
+       class="btn-report-on" id="reportBtn">
+      <i class="fa-solid fa-file-medical"></i>&nbsp; Generate Report
+    </a>
+  {% elif report_sent %}
+    <span class="btn-report-off">
+      <i class="fa-solid fa-check"></i>&nbsp; Report Generated
+    </span>
+    <div class="report-hint">Only one report allowed per session</div>
+  {% else %}
+    <span class="btn-report-off">
+      <i class="fa-solid fa-file-medical"></i>&nbsp; Generate Report
+    </span>
+    <div class="report-hint">Collecting data — {{ readings_count }}/10 readings</div>
+  {% endif %}
+</div>
+
+<script>
+// ── Weekly chart data from Django context ──
+const weeklyData = {{ weekly_data|safe|default:"[]" }};
+const hasData    = weeklyData.some(w => w.avg_hr !== null || w.avg_spo2 !== null);
+
+if (!hasData) {
+  document.getElementById('weeklyChart').style.display = 'none';
+  document.getElementById('noActivityPlaceholder').style.display = 'flex';
+} else {
+  const wLabels = weeklyData.length > 0 ? weeklyData.map(w => w.day) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  // HR expressed as % of 200 BPM scale; SpO2 shown as actual %
+  const hrPct   = weeklyData.map(w => w.avg_hr   ? parseFloat((w.avg_hr   / 200 * 100).toFixed(1)) : null);
+  const spo2Pct = weeklyData.map(w => w.avg_spo2 ? parseFloat((w.avg_spo2 / 100 * 100).toFixed(1)) : null);
+
+  new Chart(document.getElementById('weeklyChart'), {
+    type: 'bar',
+    data: {
+      labels: wLabels,
+      datasets: [
+        {
+          label: 'Heart Rate %',
+          data: hrPct,
+          backgroundColor: 'rgba(244,114,182,0.85)',   // pink
+          borderRadius: 4
+        },
+        {
+          label: 'SpO2 %',
+          data: spo2Pct,
+          backgroundColor: 'rgba(250,204,21,0.85)',    // yellow
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%'
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          ticks: {
+            stepSize: 25,
+            callback: v => v + '%'
+          },
+          grid: { color: '#f1f5f9' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ── Circular ring helper ──
+function setRing(fgId, pctId, percent, color) {
+  const fg   = document.getElementById(fgId);
+  const txt  = document.getElementById(pctId);
+  const circ = 2 * Math.PI * 50; // r=50
+  fg.style.stroke           = color;
+  fg.style.strokeDasharray  = circ;
+  fg.style.strokeDashoffset = circ - (percent / 100) * circ;
+  txt.textContent            = Math.round(percent) + '%';
+}
+
+// ── Condition-based percentage ranges ──
+const condition = "{{ active_patient.condition|default:'Normal' }}";
+const conditionMetrics = {
+  'Normal':      { healthMin: 80, healthMax: 90, oxyMin: 90, oxyMax: 100 },
+  'Observation': { healthMin: 60, healthMax: 75, oxyMin: 70, oxyMax: 85 },
+  'Critical':    { healthMin: 30, healthMax: 50, oxyMin: 50, oxyMax: 70 },
+  'Fever':       { healthMin: 60, healthMax: 75, oxyMin: 70, oxyMax: 85 },
+};
+const metrics = conditionMetrics[condition] || conditionMetrics['Normal'];
+
+// ── Compute from latest live reading (updated by poll) ──
+let currentHR   = null;
+let currentSpo2 = null;
+
+function updateCircles(hr, spo2) {
+  console.log("Updating circles with:", hr, spo2);
+  const m = metrics || { healthMin: 80, healthMax: 90, oxyMin: 90, oxyMax: 100 };
+  
+  // Health: scale HR deviation within normal range
+  let hPct = m.healthMax;
+  if (hr !== null && spo2 !== null && !isNaN(hr) && !isNaN(spo2)) {
+    if (hr > 110 || hr < 60) hPct = m.healthMin;
+    else if (hr > 100 || hr < 70) hPct = Math.round((m.healthMin + m.healthMax) / 2);
+    if (spo2 < 90) hPct = Math.min(hPct, m.healthMin);
+    else if (spo2 < 95) hPct = Math.min(hPct, Math.round((m.healthMin + m.healthMax) / 2));
+  } else {
+    hPct = m.healthMax; // Fallback to healthy baseline if no data
+  }
+
+  const oPct = (spo2 !== null && !isNaN(spo2))
+    ? Math.min(m.oxyMax, Math.max(m.oxyMin,
+        Math.round(m.oxyMin + (spo2 - 85) / 15 * (m.oxyMax - m.oxyMin))))
+    : m.oxyMax;
+
+  console.log("Computed ring percentages:", hPct, oPct);
+  setRing('healthRingFg', 'healthPct', hPct, '#10b981');
+  setRing('oxygenRingFg', 'oxygenPct', oPct,   '#06b6d4');
+}
+
+// ── Live data polling ──
+function pollLive() {
+  fetch('/api/live-data/')
+    .then(r => r.json())
+    .then(data => {
+      const hr   = (data.bpm  !== null && data.bpm  !== undefined) ? parseInt(data.bpm)  : null;
+      const spo2 = (data.spo2 !== null && data.spo2 !== undefined) ? parseInt(data.spo2) : null;
+
+      if (hr   !== null && !isNaN(hr))   document.getElementById('liveHR').textContent   = hr;
+      if (spo2 !== null && !isNaN(spo2)) document.getElementById('liveSpo2').textContent = spo2;
+
+      // Update data source badge
+      if (data.data_source_badge) {
+        const badge = document.querySelector('[data-badge="source"]');
+        if (badge) badge.textContent = data.data_source_badge;
+      }
+
+      currentHR   = hr;
+      currentSpo2 = spo2;
+      updateCircles(hr, spo2);
+    })
+    .catch(() => {});
+}
+
+// Initial poll + every 5 seconds
+pollLive();
+setInterval(pollLive, 5000);
+
+// Initialise circles immediately from weekly avg
+const allHr   = {{ vitals_data|safe }}.map(v => v.bpm).filter(v => v);
+const allSpo2 = {{ vitals_data|safe }}.map(v => v.spo2).filter(v => v);
+if (allHr.length > 0) {
+  const ah = allHr.reduce((a,b)=>a+b) / allHr.length;
+  const as2 = allSpo2.reduce((a,b)=>a+b) / allSpo2.length;
+  updateCircles(ah, as2);
+  document.getElementById('liveHR').textContent   = Math.round(ah);
+  document.getElementById('liveSpo2').textContent = Math.round(as2);
+}
+</script>
+{% endif %}
+{% endblock %}

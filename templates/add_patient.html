@@ -1,0 +1,672 @@
+<!-- VERSION: FIX_1 -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700&display=swap"
+    rel="stylesheet">
+
+<style>
+    /* --- 1. MODERN THEME VARIABLES --- */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+        --bg-gradient: linear-gradient(120deg, #e0f2fe 0%, #e0e7ff 50%, #d1fae5 100%);
+        /* Light Blue -> Lavender -> Mint */
+        --glass-bg: rgba(255, 255, 255, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.6);
+        --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --input-bg: rgba(255, 255, 255, 0.8);
+        --input-border: #cbd5e1;
+        --focus-ring: rgba(99, 102, 241, 0.4);
+        --radius: 16px;
+    }
+
+    /* --- 2. PAGE LAYOUT & BACKGROUND --- */
+    .premium-page-wrapper {
+        min-height: 85vh;
+        /* Fits nicely in your dashboard area */
+        background: var(--bg-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        font-family: 'Inter', sans-serif;
+        border-radius: var(--radius);
+        /* Rounded corners if inside dashboard */
+    }
+
+    /* --- 3. GLASSMORPHISM CARD --- */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        border-radius: 20px;
+        width: 100%;
+        max-width: 1000px;
+        padding: 40px;
+        animation: fadeInUp 0.6s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Decorative Blur Circle */
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        left: -50px;
+        width: 150px;
+        height: 150px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+
+    /* --- 4. HEADER SECTION --- */
+    .form-header {
+        text-align: center;
+        margin-bottom: 35px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .form-header h2 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 28px;
+        color: var(--text-main);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .form-header p {
+        color: var(--text-muted);
+        font-size: 15px;
+        font-weight: 400;
+    }
+
+    .header-icon {
+        color: #6366f1;
+        background: rgba(99, 102, 241, 0.1);
+        padding: 8px;
+        border-radius: 10px;
+        font-size: 20px;
+    }
+
+    /* --- 5. PROFILE PHOTO UPLOAD --- */
+    .photo-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .avatar-wrapper {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+
+    .avatar-wrapper:hover {
+        transform: scale(1.02);
+    }
+
+    .avatar-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+    }
+
+    .avatar-placeholder {
+        font-size: 40px;
+        color: #94a3b8;
+    }
+
+    .upload-btn {
+        background: #fff;
+        border: 1px solid var(--input-border);
+        color: var(--text-main);
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .upload-btn:hover {
+        background: #f8fafc;
+        border-color: #6366f1;
+        color: #6366f1;
+    }
+
+    /* --- 6. GRID LAYOUT & INPUTS --- */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 Column Layout */
+        gap: 24px;
+        position: relative;
+        z-index: 1;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        /* Mobile Responsive */
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .input-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-left: 4px;
+    }
+
+    .input-group label i {
+        color: #6366f1;
+        margin-right: 5px;
+        width: 16px;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 14px 16px;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 12px;
+        font-size: 15px;
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
+        transition: all 0.25s ease;
+        box-sizing: border-box;
+        /* Fix width issues */
+    }
+
+    .form-control:focus {
+        outline: none;
+        background: #fff;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px var(--focus-ring);
+    }
+
+    .form-control::placeholder {
+        color: #cbd5e1;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* --- 7. SECTION DIVIDERS --- */
+    .section-title {
+        grid-column: span 2;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--text-muted);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding-bottom: 10px;
+    }
+
+    .span-2 {
+        grid-column: span 2;
+    }
+
+    @media (max-width: 768px) {
+        .span-2 {
+            grid-column: span 1;
+        }
+    }
+
+    /* --- 8. CONSENT CHECKBOX --- */
+    .consent-box {
+        grid-column: span 2;
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px dashed var(--input-border);
+        padding: 15px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+        transition: 0.2s;
+    }
+
+    .consent-box:hover {
+        background: rgba(255, 255, 255, 0.6);
+        border-color: #6366f1;
+    }
+
+    input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #6366f1;
+        cursor: pointer;
+    }
+
+    .consent-label {
+        font-size: 14px;
+        color: var(--text-main);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    /* --- 9. BUTTONS --- */
+    .button-group {
+        grid-column: span 2;
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    .btn-primary-glow {
+        flex: 2;
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-secondary {
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--input-border);
+        color: var(--text-muted);
+        padding: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-secondary:hover {
+        background: #fff;
+        color: var(--text-main);
+    }
+
+    /* Animation Keyframes */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="premium-page-wrapper">
+    <div class="glass-card">
+
+        <div class="form-header">
+            <h2><i class="fa-solid fa-heart-pulse header-icon"></i> {% if edit_mode %}Update Patient Details{% else %}New Patient Registration{% endif %}</h2>
+            <p>{% if edit_mode %}Modify existing patient information{% else %}Enter patient details to begin vital monitoring{% endif %}</p>
+            <div style="margin-top: 12px; text-align: center;">
+                <span id="completionText" style="font-size: 13px; font-weight: 600; color: #6366f1;">0% Complete</span>
+                <div style="width: 200px; height: 6px; background: #e2e8f0; border-radius: 3px; margin: 6px auto 0; overflow: hidden;">
+                    <div id="completionBar" style="width: 0%; height: 100%; border-radius: 3px; transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" action="{% if edit_mode %}{% url 'edit_patient' patient.id %}{% else %}{% url 'add_patient' %}{% endif %}" enctype="multipart/form-data" id="regForm">
+            {% csrf_token %}
+
+            {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                <div style="padding: 12px 16px; border-radius: 10px; margin-bottom: 8px; font-size: 14px; font-weight: 500;
+                    {% if message.tags == 'success' %}background: #dcfce7; color: #166534; border: 1px solid #bbf7d0;
+                    {% elif message.tags == 'error' %}background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;
+                    {% else %}background: #e0f2fe; color: #075985; border: 1px solid #bae6fd;{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="photo-section">
+                <div class="avatar-wrapper" id="avatarBox" style="{% if patient.photo %}border-color: #22c55e;{% endif %}">
+                    <span class="avatar-placeholder" style="{% if patient.photo %}display:none;{% endif %}"><i class="fa-solid fa-user"></i></span>
+                    <img id="previewImg" src="{% if patient.photo %}{{ patient.photo.url }}{% else %}#{% endif %}" alt="Preview" style="{% if patient.photo %}display:block;{% else %}display:none;{% endif %}">
+                </div>
+                <label for="id_photo" class="upload-btn">
+                    <i class="fa-solid fa-camera"></i> Upload Patient Photo
+                </label>
+                <input type="file" name="photo" id="id_photo" accept="image/*" style="display:none;"
+                    onchange="previewFile(this)">
+            </div>
+
+            <div class="form-grid">
+
+                <div class="section-title">Required Information</div>
+
+                <div class="input-group">
+                    <label><i class="fa-regular fa-user"></i> First Name</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="e.g. Sarah"
+                        value="{{ patient.first_name }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-regular fa-user"></i> Last Name</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="e.g. Connor"
+                        value="{{ patient.last_name }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-cake-candles"></i> Age</label>
+                    <input type="number" name="age" class="form-control" placeholder="Years" min="1" max="120"
+                        value="{{ patient.age }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-venus-mars"></i> Gender</label>
+                    <select name="gender" class="form-control" required>
+                        <option value="" disabled selected>Select Gender</option>
+                        <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-droplet"></i> Blood Group</label>
+                    <select name="blood_group" class="form-control" required>
+                        <option value="" disabled selected>Select Blood Group</option>
+                        <option value="A+" {% if patient.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                        <option value="A-" {% if patient.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                        <option value="B+" {% if patient.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                        <option value="B-" {% if patient.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                        <option value="AB+" {% if patient.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                        <option value="AB-" {% if patient.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                        <option value="O+" {% if patient.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                        <option value="O-" {% if patient.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-phone"></i> Contact Number</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="+1 (555) 000-0000"
+                        value="{{ patient.phone }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="patient@email.com"
+                        value="{{ patient.email }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-building"></i> Department</label>
+                    <input type="text" name="department" class="form-control" placeholder="e.g. Cardiology"
+                        value="{{ patient.department }}" required>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-stethoscope"></i> Monitoring Purpose</label>
+                    <select name="condition" class="form-control" required>
+                        <option value="" disabled selected>Select Purpose</option>
+                        <option value="Routine Check" {% if patient.condition == 'Routine Check' %}selected{% endif %}>
+                            Routine Check</option>
+                        <option value="Continuous Monitoring" {% if patient.condition == 'Continuous Monitoring' %}selected{% endif %}>Continuous Monitoring</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-wave-square"></i> Monitoring Type</label>
+                    <select name="monitoring_type" class="form-control">
+                        <option value="" disabled selected>Select Vitals</option>
+                        <option value="SpO2 & Pulse">SpO₂ & Pulse Monitoring</option>
+                        <option value="General Vitals">General Vital Monitoring</option>
+                    </select>
+                </div>
+
+                <div class="section-title" style="margin-top: 25px;">Optional Details</div>
+
+                <div class="input-group span-2">
+                    <label><i class="fa-solid fa-file-medical"></i> Known Medical Conditions</label>
+                    <textarea name="medical_history" class="form-control"
+                        placeholder="Allergies, chronic conditions, or recent surgeries...">{{ patient.medical_history }}</textarea>
+                </div>
+
+                <div class="input-group span-2">
+                    <label><i class="fa-regular fa-clipboard"></i> Notes / Observations</label>
+                    <textarea name="notes" class="form-control"
+                        placeholder="Specific monitoring instructions...">{{ patient.notes }}</textarea>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-ruler-vertical"></i> Height (cm)</label>
+                    <input type="number" name="height" class="form-control" placeholder="cm" value="{{ patient.height }}">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fa-solid fa-weight-scale"></i> Weight (kg)</label>
+                    <input type="number" name="weight" class="form-control" placeholder="kg" value="{{ patient.weight }}">
+                </div>
+
+                <div class="consent-box">
+                    <input type="checkbox" id="consentCheck">
+                    <label for="consentCheck" class="consent-label">I consent to vital monitoring and data
+                        processing</label>
+                </div>
+
+                <div class="button-group">
+                    <a href="{% url 'dashboard' %}" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary-glow">
+                        {% if edit_mode %}Update Details{% else %}Register & Start Monitoring{% endif %} <i
+                            class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // --- 1. CONFIGURATION: 10 MANDATORY FIELDS (each = 10%) ---
+    const REQUIRED_FIELDS = [
+        { name: 'first_name', label: 'First Name', type: 'text' },
+        { name: 'last_name', label: 'Last Name', type: 'text' },
+        { name: 'age', label: 'Age', type: 'text' },
+        { name: 'gender', label: 'Gender', type: 'select' },
+        { name: 'blood_group', label: 'Blood Group', type: 'select' },
+        { name: 'phone', label: 'Contact Number', type: 'text' },
+        { name: 'email', label: 'Email Address', type: 'text' },
+        { name: 'condition', label: 'Monitoring Purpose', type: 'select' },
+        { name: 'department', label: 'Department', type: 'text' },
+        { name: 'photo', label: 'Profile Photo', type: 'file' }
+    ];
+
+    // --- 2. LIVE COMPLETION ENGINE ---
+    function updateCompletion() {
+        let filledCount = 0;
+        let missing = [];
+
+        REQUIRED_FIELDS.forEach(field => {
+            const el = document.querySelector('[name="' + field.name + '"]');
+            if (!el) return;
+
+            let isFilled = false;
+            if (field.type === 'file') {
+                // If in edit mode and no new file selected, treat as filled if there's an existing photo
+                const existingPhoto = {% if edit_mode and patient.photo %}true{% else %}false{% endif %};
+                isFilled = (el.files && el.files.length > 0) || existingPhoto;
+            } else if (field.type === 'select') {
+                isFilled = (el.value && el.value.trim() !== "" && el.value !== "Select Gender" && el.value !== "Select Purpose" && el.value !== "Select Blood Group");
+            } else {
+                isFilled = (el.value && el.value.trim() !== "");
+            }
+
+            if (isFilled) {
+                filledCount++;
+            } else {
+                missing.push(field.label);
+            }
+        });
+
+        const total = REQUIRED_FIELDS.length;
+        const percentage = Math.round((filledCount / total) * 100);
+        
+        // Update UI
+        const bar = document.getElementById('completionBar');
+        const text = document.getElementById('completionText');
+        const btn = document.querySelector('.btn-primary-glow');
+
+        if (bar) {
+            bar.style.width = percentage + '%';
+            bar.style.background = (percentage === 100) ? '#22c55e' : 'linear-gradient(135deg, #0ea5e9, #6366f1)';
+        }
+        if (text) {
+            text.textContent = percentage + '% Complete';
+            text.style.color = (percentage === 100) ? '#22c55e' : '#6366f1';
+        }
+
+        // Visual blocking of button (Logic Step 5)
+        if (btn) {
+            if (percentage < 100) {
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                btn.title = "Complete all fields to register";
+            } else {
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.title = "";
+            }
+        }
+
+        return { percentage, missing };
+    }
+
+    // --- 3. PHOTO PREVIEW ---
+    function previewFile(input) {
+        const file = input.files[0];
+        const preview = document.getElementById('previewImg');
+        const placeholder = document.querySelector('.avatar-placeholder');
+        const box = document.getElementById('avatarBox');
+
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                alert("File too large! Max 2MB.");
+                input.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                if (box) box.style.borderColor = '#22c55e';
+            }
+            reader.readAsDataURL(file);
+        }
+        updateCompletion();
+    }
+
+    // --- 4. INITIALIZATION & LISTENERS ---
+    document.addEventListener('DOMContentLoaded', function() {
+        REQUIRED_FIELDS.forEach(field => {
+            const el = document.querySelector('[name="' + field.name + '"]');
+            if (el) {
+                ['input', 'change', 'blur'].forEach(evt => {
+                    el.addEventListener(evt, updateCompletion);
+                });
+            }
+        });
+        
+        // Initial check
+        updateCompletion();
+    });
+
+    // --- 5. SUBMISSION HARD-BLOCK (Logic Step 2 & 5) ---
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+        const { percentage, missing } = updateCompletion();
+        const isEditMode = {% if edit_mode %}true{% else %}false{% endif %};
+
+        if (percentage < 100) {
+            // In edit mode, we might allow submission if only photo is missing (though we fixed it in updateCompletion)
+            e.preventDefault();
+            
+            if (missing.includes('Profile Photo') && !isEditMode) {
+                alert("Profile photo is required");
+            } else if (missing.length > 0) {
+                alert("Incomplete Profile: Please fill all required fields correctly to reach 100%. Missing: " + missing.join(', '));
+            }
+            return false;
+        }
+
+        // Show loading state
+        const btn = document.querySelector('.btn-primary-glow');
+        if (btn) {
+            btn.innerHTML = isEditMode ? '<i class="fa-solid fa-circle-notch fa-spin"></i> Updating...' : '<i class="fa-solid fa-circle-notch fa-spin"></i> Registering...';
+            btn.style.pointerEvents = 'none';
+        }
+    });
+
+</script>
+
+{% endblock %}

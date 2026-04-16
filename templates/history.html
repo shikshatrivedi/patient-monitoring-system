@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid p-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0">Patient Frame: {{ patient.first_name }} {{ patient.last_name }}</h2>
+      <p class="text-muted mb-0">ID: #{{ patient.id }} &nbsp;|&nbsp; Condition: {{ patient.condition }}</p>
+    </div>
+    <a href="{% url 'patient_list' %}" class="btn btn-sm btn-outline-secondary">
+      &larr; Back to Patient List
+    </a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 360px; gap: 24px;">
+
+    <!-- ── Weekly Bar Chart ── -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h5 class="mb-0" style="color:#1e293b; font-weight:700;">Your Activity</h5>
+          <span style="font-size:13px; font-weight:600; color:#64748b;">Weekly</span>
+        </div>
+        <div id="activityContainer" style="height: 320px; position: relative;">
+          <canvas id="weeklyChart"></canvas>
+          <div id="noActivityPlaceholder" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #e2e8f0; color: #94a3b8; text-align: center;">
+              <i class="fa-solid fa-chart-line" style="font-size: 40px; margin-bottom: 12px; opacity: 0.5;"></i>
+              <p style="font-size: 14px; font-weight: 500; margin: 0;">No activity data recorded yet.</p>
+              <p style="font-size: 12px; opacity: 0.8;">Vitals will appear here once monitoring begins.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Past Reports ── -->
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h5 class="mb-0" style="color:#1e293b; font-weight:700; margin-bottom:16px;">
+          <i class="fa-solid fa-file-pdf text-danger me-1"></i> Generated Reports
+        </h5>
+        {% if saved_reports %}
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          {% for report in saved_reports %}
+          <div style="display:flex; justify-content:space-between; align-items:center;
+                      padding:10px 12px; background:#f8fafc; border-radius:10px;">
+            <div>
+              <div style="font-size:13px; font-weight:600; color:#334155;">
+                {{ report.generated_at|date:"d M Y" }}
+              </div>
+              <div style="font-size:11px; color:#94a3b8;">
+                {{ report.generated_at|date:"H:i" }}
+              </div>
+            </div>
+            <a href="{% url 'download_report' report.id %}"
+               class="btn btn-sm btn-outline-success"
+               style="font-size:12px;">
+              <i class="fa-solid fa-download"></i> PDF
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div style="padding: 24px; border-radius: 12px; background: #f8fafc; border: 1px dashed #e2e8f0; text-align: center; color: #94a3b8;">
+          <i class="fa-solid fa-file-circle-minus" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;"></i>
+          <p style="font-size: 13px; font-weight: 500; margin: 0;">No reports generated yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+</div><!-- /container -->
+
+<script>
+const weeklyData = {{ weekly_data|safe|default:"[]" }};
+const hasData    = weeklyData.some(w => w.avg_hr !== null || w.avg_spo2 !== null);
+
+if (!hasData) {
+  document.getElementById('weeklyChart').style.display = 'none';
+  document.getElementById('noActivityPlaceholder').style.display = 'flex';
+} else {
+  const labels     = weeklyData.map(w => w.day);
+  const hrPct      = weeklyData.map(w => w.avg_hr   ? +(w.avg_hr   / 200 * 100).toFixed(1) : null);
+  const spo2Pct    = weeklyData.map(w => w.avg_spo2 ? +(w.avg_spo2 / 100 * 100).toFixed(1) : null);
+
+  new Chart(document.getElementById('weeklyChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Heart Rate %',
+          data: hrPct,
+          backgroundColor: 'rgba(30, 64, 175, 0.85)',
+          borderRadius: 4
+        },
+        {
+          label: 'SpO2 %',
+          data: spo2Pct,
+          backgroundColor: 'rgba(45, 212, 191, 0.85)',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%'
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0, max: 100,
+          ticks: { stepSize: 25, callback: v => v + '%' },
+          grid: { color: '#f1f5f9' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

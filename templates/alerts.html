@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <h3 style="margin-bottom: 20px; color: var(--danger);">Critical Alerts Log</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Patient</th>
+                <th>Alert Type</th>
+                <th>Value</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.timestamp|date:"H:i:s" }}</td>
+                <td>{{ alert.patient.first_name }} {{ alert.patient.last_name }}</td>
+                <td style="color: var(--danger); font-weight: bold;">{{ alert.alert_type }}</td>
+                <td>{{ alert.value }}</td>
+                <td>
+                    {% if alert.is_acknowledged %}
+                    <span style="color: grey;">Acknowledged</span>
+                    {% else %}
+                    <button class="btn btn-primary" style="padding: 4px 10px; font-size: 12px;">Ack</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No alerts recorded today.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
