@@ -1,4 +1,5 @@
 import os  # <--- 1. PUT THIS AT THE TOP
+import dj_database_url
 from pathlib import Path
 """
 Django settings for pms_core project.
@@ -96,6 +97,12 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Render PostgreSQL database
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
+    )
 
 
 # Password validation
